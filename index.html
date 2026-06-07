@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>상담일지 포털</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; min-height: 100vh; }
+    .tab-bar { display: flex; border-bottom: 1px solid #e0e0e0; background: #fff; padding: 0 1.5rem; position: sticky; top: 0; z-index: 10; }
+    .tab { padding: 14px 20px; font-size: 14px; cursor: pointer; border-bottom: 2px solid transparent; color: #888; transition: all 0.15s; }
+    .tab.active { color: #111; border-bottom-color: #111; font-weight: 500; }
+    .screen { display: none; padding: 1.5rem; max-width: 680px; margin: 0 auto; }
+    .screen.active { display: block; }
+    .card { background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+    .card-title { font-size: 15px; font-weight: 600; margin-bottom: 1rem; color: #111; }
+    label { font-size: 13px; color: #666; display: block; margin-bottom: 6px; }
+    input, select, textarea { width: 100%; margin-bottom: 1rem; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; transition: border 0.15s; }
+    input:focus, textarea:focus, select:focus { border-color: #111; }
+    textarea { height: 120px; resize: vertical; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; cursor: pointer; background: #fff; color: #111; transition: background 0.15s; font-family: inherit; }
+    .btn:hover { background: #f5f5f5; }
+    .btn-primary { background: #111; color: #fff; border-color: #111; }
+    .btn-primary:hover { background: #333; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-full { width: 100%; justify-content: center; }
+    .student-list { display: flex; flex-direction: column; gap: 8px; }
+    .student-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: #fff; border: 1px solid #eee; border-radius: 10px; cursor: pointer; transition: background 0.1s; }
+    .student-item:hover { background: #f9f9f9; }
+    .student-name { font-size: 14px; font-weight: 500; }
+    .student-meta { font-size: 12px; color: #888; margin-top: 2px; }
+    .badge { font-size: 11px; padding: 3px 8px; border-radius: 99px; }
+    .badge-new { background: #e8f4fd; color: #1a6fb5; }
+    .badge-ok { background: #eaf3de; color: #3b6d11; }
+    .journal-entry { border-left: 2px solid #e0e0e0; padding-left: 12px; margin-bottom: 1.2rem; }
+    .journal-date { font-size: 12px; color: #888; margin-bottom: 4px; }
+    .journal-text { font-size: 14px; line-height: 1.7; color: #222; }
+    .journal-goal { font-size: 12px; color: #666; margin-top: 6px; }
+    .login-wrap { max-width: 360px; margin: 3rem auto; }
+    .login-logo { font-size: 22px; font-weight: 700; margin-bottom: 0.4rem; }
+    .login-sub { font-size: 13px; color: #888; margin-bottom: 2rem; }
+    .back-btn { background: none; border: none; cursor: pointer; color: #888; font-size: 13px; display: flex; align-items: center; gap: 4px; padding: 0; margin-bottom: 1rem; font-family: inherit; }
+    .back-btn:hover { color: #111; }
+    .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1rem; }
+    .stat-card { background: #fff; border: 1px solid #eee; border-radius: 10px; padding: 12px; text-align: center; }
+    .stat-num { font-size: 24px; font-weight: 600; }
+    .stat-label { font-size: 11px; color: #888; margin-top: 2px; }
+    .empty { text-align: center; padding: 2rem; color: #aaa; font-size: 14px; }
+    .success-msg { font-size: 13px; color: #3b6d11; background: #eaf3de; padding: 10px 14px; border-radius: 8px; margin-bottom: 1rem; display: none; }
+    .error-msg { font-size: 13px; color: #a32d2d; background: #fcebeb; padding: 10px 14px; border-radius: 8px; margin-bottom: 1rem; display: none; }
+    .row { display: flex; gap: 12px; align-items: center; }
+  </style>
+</head>
+<body>
+
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('admin')">📝 조교 화면</div>
+  <div class="tab" onclick="switchTab('parent')">👨‍👩‍👧 학부모 화면</div>
+</div>
+
+<!-- 조교 화면 -->
+<div id="screen-admin" class="screen active">
+
+  <div id="admin-list-view">
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label">전체 학생</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-entries">0</div><div class="stat-label">총 일지</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-week">0</div><div class="stat-label">이번 주 작성</div></div>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between; margin-bottom:1rem;">
+        <div class="card-title" style="margin:0">학생 목록</div>
+        <button class="btn btn-sm btn-primary" onclick="showAddStudent()">+ 학생 추가</button>
+      </div>
+      <div class="student-list" id="student-list"></div>
+    </div>
+  </div>
+
+  <div id="admin-add-student" style="display:none;">
+    <button class="back-btn" onclick="showAdminList()">← 목록으로</button>
+    <div class="card">
+      <div class="card-title">학생 추가</div>
+      <label>학생 이름</label>
+      <input type="text" id="new-student-name" placeholder="예: 김민준">
+      <label>학부모 이메일 (로그인 계정)</label>
+      <input type="email" id="new-student-email" placeholder="예: parent@email.com">
+      <label>학부모 비밀번호 설정</label>
+      <input type="password" id="new-student-pw" placeholder="비밀번호 입력">
+      <div class="success-msg" id="add-student-msg">✅ 학생이 추가되었습니다!</div>
+      <button class="btn btn-primary" onclick="addStudent()">추가하기</button>
+    </div>
+  </div>
+
+  <div id="admin-journal-view" style="display:none;">
+    <button class="back-btn" onclick="showAdminList()">← 목록으로</button>
+    <div class="card">
+      <div class="card-title" id="journal-student-name">학생 이름</div>
+      <label>날짜</label>
+      <input type="date" id="journal-date">
+      <label>상담 내용</label>
+      <textarea id="journal-content" placeholder="이번 주 상담 내용을 입력하세요..."></textarea>
+      <label>다음 주 목표</label>
+      <input type="text" id="journal-goal" placeholder="예: 수학 2단원 예습 완료">
+      <div class="success-msg" id="journal-success-msg">✅ 상담일지가 저장되었습니다!</div>
+      <button class="btn btn-primary" onclick="saveJournal()">저장하기</button>
+    </div>
+    <div class="card">
+      <div class="card-title">이전 일지</div>
+      <div id="prev-journals"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 학부모 화면 -->
+<div id="screen-parent" class="screen">
+
+  <div id="parent-login">
+    <div class="login-wrap">
+      <div class="login-logo">📋 상담일지 포털</div>
+      <div class="login-sub">학부모님 전용 로그인</div>
+      <div class="card">
+        <label>이메일</label>
+        <input type="email" id="parent-email" placeholder="이메일 입력">
+        <label>비밀번호</label>
+        <input type="password" id="parent-pw" placeholder="비밀번호 입력">
+        <div class="error-msg" id="login-error">이메일 또는 비밀번호가 틀렸습니다.</div>
+        <button class="btn btn-primary btn-full" onclick="parentLogin()">로그인</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="parent-dashboard" style="display:none;">
+    <div class="row" style="justify-content:space-between; margin-bottom:1rem;">
+      <div>
+        <div style="font-size:16px; font-weight:600;" id="parent-welcome">안녕하세요</div>
+        <div style="font-size:13px; color:#888;" id="parent-child-name"></div>
+      </div>
+      <button class="btn btn-sm" onclick="parentLogout()">로그아웃</button>
+    </div>
+    <div class="card">
+      <div class="card-title">📖 상담일지</div>
+      <div id="parent-journals"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // 데이터 저장소 (localStorage 사용 - 브라우저에 저장됨)
+  function loadData() {
+    const s = localStorage.getItem('students');
+    const j = localStorage.getItem('journals');
+    return {
+      students: s ? JSON.parse(s) : [],
+      journals: j ? JSON.parse(j) : []
+    };
+  }
+  function saveData(students, journals) {
+    localStorage.setItem('students', JSON.stringify(students));
+    localStorage.setItem('journals', JSON.stringify(journals));
+  }
+
+  let { students, journals } = loadData();
+  let nextId = students.length ? Math.max(...students.map(s => s.id)) + 1 : 1;
+  let currentStudentId = null;
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (tab === 'admin' && i === 0) || (tab === 'parent' && i === 1)));
+    document.getElementById('screen-admin').classList.toggle('active', tab === 'admin');
+    document.getElementById('screen-parent').classList.toggle('active', tab === 'parent');
+  }
+
+  function getWeekStart() {
+    const now = new Date();
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(now.setDate(diff));
+    return monday.toISOString().slice(0, 10);
+  }
+
+  function renderStudentList() {
+    const list = document.getElementById('student-list');
+    if (!students.length) {
+      list.innerHTML = '<div class="empty">아직 등록된 학생이 없어요.<br>학생 추가 버튼을 눌러주세요!</div>';
+    } else {
+      list.innerHTML = students.map(s => {
+        const count = journals.filter(j => j.studentId === s.id).length;
+        const latest = journals.filter(j => j.studentId === s.id).sort((a, b) => b.date.localeCompare(a.date))[0];
+        const isNew = latest && latest.date >= getWeekStart();
+        return `<div class="student-item" onclick="openJournal(${s.id})">
+          <div>
+            <div class="student-name">${s.name}</div>
+            <div class="student-meta">일지 ${count}건 · 최근: ${latest ? latest.date : '없음'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="badge ${isNew ? 'badge-new' : 'badge-ok'}">${isNew ? '이번주 완료' : '업데이트 필요'}</span>
+            <span style="color:#ccc;">›</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    document.getElementById('stat-total').textContent = students.length;
+    document.getElementById('stat-entries').textContent = journals.length;
+    document.getElementById('stat-week').textContent = journals.filter(j => j.date >= getWeekStart()).length;
+  }
+
+  function showAdminList() {
+    document.getElementById('admin-list-view').style.display = '';
+    document.getElementById('admin-journal-view').style.display = 'none';
+    document.getElementById('admin-add-student').style.display = 'none';
+    renderStudentList();
+  }
+
+  function showAddStudent() {
+    document.getElementById('admin-list-view').style.display = 'none';
+    document.getElementById('admin-add-student').style.display = '';
+  }
+
+  function addStudent() {
+    const name = document.getElementById('new-student-name').value.trim();
+    const email = document.getElementById('new-student-email').value.trim();
+    const pw = document.getElementById('new-student-pw').value.trim();
+    if (!name || !email || !pw) { alert('모든 항목을 입력해주세요.'); return; }
+    if (students.find(s => s.email === email)) { alert('이미 등록된 이메일이에요.'); return; }
+    students.push({ id: nextId++, name, email, pw });
+    saveData(students, journals);
+    document.getElementById('add-student-msg').style.display = 'block';
+    document.getElementById('new-student-name').value = '';
+    document.getElementById('new-student-email').value = '';
+    document.getElementById('new-student-pw').value = '';
+    setTimeout(() => { document.getElementById('add-student-msg').style.display = 'none'; showAdminList(); }, 1200);
+  }
+
+  function openJournal(id) {
+    currentStudentId = id;
+    const s = students.find(x => x.id === id);
+    document.getElementById('journal-student-name').textContent = s.name + ' 상담일지';
+    document.getElementById('journal-date').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('journal-content').value = '';
+    document.getElementById('journal-goal').value = '';
+    document.getElementById('admin-list-view').style.display = 'none';
+    document.getElementById('admin-journal-view').style.display = '';
+    renderPrevJournals(id);
+  }
+
+  function renderPrevJournals(id) {
+    const jList = journals.filter(j => j.studentId === id).sort((a, b) => b.date.localeCompare(a.date));
+    const el = document.getElementById('prev-journals');
+    el.innerHTML = jList.length ? jList.map(j => `
+      <div class="journal-entry">
+        <div class="journal-date">${j.date}</div>
+        <div class="journal-text">${j.content}</div>
+        ${j.goal ? `<div class="journal-goal">🎯 목표: ${j.goal}</div>` : ''}
+      </div>`).join('') : '<div class="empty">아직 작성된 일지가 없습니다</div>';
+  }
+
+  function saveJournal() {
+    const date = document.getElementById('journal-date').value;
+    const content = document.getElementById('journal-content').value.trim();
+    const goal = document.getElementById('journal-goal').value.trim();
+    if (!date || !content) { alert('날짜와 상담 내용을 입력해주세요.'); return; }
+    journals.push({ studentId: currentStudentId, date, content, goal });
+    saveData(students, journals);
+    document.getElementById('journal-success-msg').style.display = 'block';
+    setTimeout(() => document.getElementById('journal-success-msg').style.display = 'none', 1500);
+    document.getElementById('journal-content').value = '';
+    document.getElementById('journal-goal').value = '';
+    renderPrevJournals(currentStudentId);
+  }
+
+  function parentLogin() {
+    const email = document.getElementById('parent-email').value.trim();
+    const pw = document.getElementById('parent-pw').value.trim();
+    const student = students.find(s => s.email === email && s.pw === pw);
+    if (!student) { document.getElementById('login-error').style.display = 'block'; return; }
+    document.getElementById('login-error').style.display = 'none';
+    document.getElementById('parent-login').style.display = 'none';
+    document.getElementById('parent-dashboard').style.display = '';
+    document.getElementById('parent-welcome').textContent = '안녕하세요, 학부모님 👋';
+    document.getElementById('parent-child-name').textContent = student.name + ' 학생의 상담일지입니다';
+    const jList = journals.filter(j => j.studentId === student.id).sort((a, b) => b.date.localeCompare(a.date));
+    const el = document.getElementById('parent-journals');
+    el.innerHTML = jList.length ? jList.map(j => `
+      <div class="journal-entry" style="margin-bottom:1.2rem;">
+        <div class="journal-date">${j.date}</div>
+        <div class="journal-text">${j.content}</div>
+        ${j.goal ? `<div class="journal-goal">🎯 다음 목표: ${j.goal}</div>` : ''}
+      </div>`).join('') : '<div class="empty">아직 작성된 일지가 없습니다</div>';
+  }
+
+  function parentLogout() {
+    document.getElementById('parent-login').style.display = '';
+    document.getElementById('parent-dashboard').style.display = 'none';
+    document.getElementById('parent-email').value = '';
+    document.getElementById('parent-pw').value = '';
+  }
+
+  renderStudentList();
+</script>
+</body>
+</html>
