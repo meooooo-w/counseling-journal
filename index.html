@@ -6,6 +6,584 @@
   <title>상담일지 포털</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', '맑은 고딕', sans-serif; background: #f0f0ec; min-height: 100vh; font-size: 14px; }
+
+    /* 로그인 */
+    .login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .login-box { background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 2rem; width: 340px; }
+    .login-logo { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .login-sub { font-size: 13px; color: #888; margin-bottom: 1.5rem; }
+    label { font-size: 13px; color: #555; display: block; margin-bottom: 5px; }
+    input, select, textarea { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 7px; font-size: 13px; font-family: inherit; outline: none; transition: border 0.15s; margin-bottom: 12px; }
+    input:focus, select:focus, textarea:focus { border-color: #333; }
+    textarea { resize: vertical; }
+    .btn { display: inline-flex; align-items: center; gap: 5px; padding: 8px 14px; border: 1px solid #ddd; border-radius: 7px; font-size: 13px; cursor: pointer; background: #fff; color: #111; font-family: inherit; transition: background 0.15s; }
+    .btn:hover { background: #f5f5f5; }
+    .btn-primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+    .btn-primary:hover { background: #333; }
+    .btn-full { width: 100%; justify-content: center; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-danger { background: #fff0f0; color: #c00; border-color: #fcc; }
+    .error-msg { font-size: 12px; color: #c00; background: #fff0f0; padding: 8px 12px; border-radius: 7px; margin-bottom: 12px; display: none; }
+    .success-msg { font-size: 12px; color: #2a7a2a; background: #f0faf0; padding: 8px 12px; border-radius: 7px; margin-bottom: 12px; display: none; }
+
+    /* 공통 레이아웃 */
+    .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 52px; position: sticky; top: 0; z-index: 100; }
+    .topbar-title { font-size: 15px; font-weight: 700; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #666; }
+    .main { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
+
+    /* 조교 화면 */
+    .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.2rem; }
+    .stat-card { background: #fff; border: 1px solid #eee; border-radius: 10px; padding: 12px; text-align: center; }
+    .stat-num { font-size: 26px; font-weight: 700; }
+    .stat-label { font-size: 11px; color: #888; margin-top: 2px; }
+    .card { background: #fff; border: 1px solid #eee; border-radius: 10px; padding: 1.2rem; margin-bottom: 1rem; }
+    .card-title { font-size: 14px; font-weight: 700; margin-bottom: 1rem; }
+    .student-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid #eee; border-radius: 8px; cursor: pointer; margin-bottom: 7px; transition: background 0.1s; }
+    .student-item:hover { background: #f9f9f9; }
+    .badge { font-size: 11px; padding: 2px 8px; border-radius: 99px; }
+    .badge-done { background: #e8f4fd; color: #1a6fb5; }
+    .badge-need { background: #fff8e0; color: #a07000; }
+    .back-btn { background: none; border: none; cursor: pointer; color: #888; font-size: 13px; padding: 0; margin-bottom: 1rem; font-family: inherit; }
+    .back-btn:hover { color: #111; }
+    .section-title { font-size: 13px; font-weight: 700; color: #333; margin: 1.2rem 0 0.6rem; border-left: 3px solid #1a1a1a; padding-left: 8px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+    /* 집중공략 체크 표 */
+    .check-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 8px; }
+    .check-table th, .check-table td { border: 1px solid #e0e0e0; padding: 5px 6px; text-align: center; }
+    .check-table th { background: #f5f5f5; font-weight: 600; }
+    .check-table input[type=text] { margin: 0; padding: 3px 5px; border: none; border-radius: 4px; font-size: 12px; text-align: center; width: 100%; }
+    .check-table input[type=text]:focus { outline: 1px solid #999; }
+    select.inline { margin: 0; padding: 3px 4px; font-size: 12px; width: 100%; }
+
+    /* 시험 성적 표 */
+    .exam-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 8px; }
+    .exam-table th, .exam-table td { border: 1px solid #e0e0e0; padding: 5px 6px; }
+    .exam-table th { background: #f5f5f5; font-weight: 600; text-align: center; }
+    .exam-table td input[type=text] { margin: 0; padding: 3px 5px; border: none; font-size: 12px; width: 100%; }
+    .exam-table td input[type=text]:focus { outline: 1px solid #999; border-radius: 3px; }
+    .exam-table td textarea { margin: 0; padding: 3px 5px; border: none; font-size: 12px; width: 100%; height: 50px; }
+    .exam-table td textarea:focus { outline: 1px solid #999; border-radius: 3px; }
+
+    /* 주차별 상담 표 */
+    .counsel-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 8px; }
+    .counsel-table th, .counsel-table td { border: 1px solid #e0e0e0; padding: 5px 6px; vertical-align: top; }
+    .counsel-table th { background: #f5f5f5; font-weight: 600; text-align: center; white-space: nowrap; }
+    .counsel-table td textarea { margin: 0; padding: 3px 5px; border: none; font-size: 12px; width: 100%; height: 55px; }
+    .counsel-table td textarea:focus { outline: 1px solid #999; border-radius: 3px; }
+    .counsel-table td select { margin: 0; padding: 3px 4px; font-size: 12px; width: 60px; }
+
+    /* 학부모 화면 - 상담일지 뷰 */
+    .report-wrap { background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 2rem; max-width: 820px; margin: 0 auto; }
+    .report-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+    .report-academy { font-size: 16px; font-weight: 700; }
+    .report-main-title { text-align: center; font-size: 18px; font-weight: 700; margin-bottom: 1.2rem; }
+    .report-section { margin-bottom: 1.4rem; }
+    .report-section-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+    .report-section-title::before { content: '◆'; font-size: 10px; }
+    .report-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .report-table th, .report-table td { border: 1px solid #bbb; padding: 5px 8px; }
+    .report-table th { background: #f0f0f0; font-weight: 600; text-align: center; white-space: nowrap; }
+    .report-table td { text-align: center; }
+    .report-table td.left { text-align: left; }
+    .symbol-o { color: #1a6fb5; font-weight: 700; }
+    .symbol-x { color: #c00; font-weight: 700; }
+    .symbol-tri { color: #888; }
+    .entry-list { display: flex; flex-direction: column; gap: 10px; }
+    .entry-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; }
+    .entry-date { font-size: 12px; color: #888; margin-bottom: 6px; }
+
+    .hidden { display: none !important; }
+    .flex-row { display: flex; gap: 10px; align-items: center; }
+    .mt { margin-top: 8px; }
+    .empty { text-align: center; padding: 2rem; color: #aaa; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<!-- 로그인 화면 -->
+<div id="page-login" class="login-page">
+  <div class="login-box">
+    <div class="login-logo">📋 상담일지 포털</div>
+    <div class="login-sub">최낙현수학학원</div>
+    <label>이메일</label>
+    <input type="email" id="login-email" placeholder="이메일 입력">
+    <label>비밀번호</label>
+    <input type="password" id="login-pw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="error-msg" id="login-error">이메일 또는 비밀번호가 틀렸습니다.</div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">로그인</button>
+  </div>
+</div>
+
+<!-- 조교 화면 -->
+<div id="page-admin" class="hidden">
+  <div class="topbar">
+    <div class="topbar-title">📝 조교 관리 화면</div>
+    <div class="topbar-right">
+      <span id="admin-name-display"></span>
+      <button class="btn btn-sm" onclick="doLogout()">로그아웃</button>
+    </div>
+  </div>
+  <div class="main">
+
+    <!-- 학생 목록 -->
+    <div id="admin-list">
+      <div class="stat-row">
+        <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label">전체 학생</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-entries">0</div><div class="stat-label">총 일지</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-week">0</div><div class="stat-label">이번 주 작성</div></div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <div class="card-title" style="margin:0">학생 목록</div>
+          <button class="btn btn-sm btn-primary" onclick="showView('admin-add-student')">+ 학생 추가</button>
+        </div>
+        <div id="student-list"></div>
+      </div>
+    </div>
+
+    <!-- 학생 추가 -->
+    <div id="admin-add-student" class="hidden">
+      <button class="back-btn" onclick="showView('admin-list')">← 목록으로</button>
+      <div class="card">
+        <div class="card-title">학생 추가</div>
+        <div class="grid2">
+          <div><label>학생 이름</label><input type="text" id="ns-name" placeholder="예: 정민서"></div>
+          <div><label>학교</label><input type="text" id="ns-school" placeholder="예: 옥련여자고등학교"></div>
+          <div><label>학년</label><input type="text" id="ns-grade" placeholder="예: 1학년"></div>
+          <div><label>클리닉 시간</label><input type="text" id="ns-clinic" placeholder="예: 월.화.수.목.금 5~8p.m"></div>
+          <div><label>희망학과</label><input type="text" id="ns-major" placeholder="예: 이과(공대)"></div>
+        </div>
+        <label>학부모 이메일 (로그인 계정)</label>
+        <input type="email" id="ns-email" placeholder="예: parent@email.com">
+        <label>학부모 비밀번호</label>
+        <input type="password" id="ns-pw" placeholder="비밀번호 설정">
+        <div class="success-msg" id="add-ok">✅ 학생이 추가되었습니다!</div>
+        <div class="error-msg" id="add-err">모든 항목을 입력해주세요.</div>
+        <button class="btn btn-primary" onclick="addStudent()">추가하기</button>
+      </div>
+    </div>
+
+    <!-- 일지 작성 -->
+    <div id="admin-journal" class="hidden">
+      <button class="back-btn" onclick="showView('admin-list')">← 목록으로</button>
+      <div class="card">
+        <div class="card-title" id="journal-title">상담일지 작성</div>
+
+        <div class="section-title">기본 정보</div>
+        <div class="grid3">
+          <div><label>작성 기간</label><input type="text" id="j-period" placeholder="예: 5.6월"></div>
+          <div><label>중간고사 성적</label><input type="text" id="j-mid" placeholder="예: 83.9점(2등급)"></div>
+          <div><label>6월 모의고사 성적</label><input type="text" id="j-mock" placeholder="예: OO점(O등급)"></div>
+        </div>
+
+        <div class="section-title">숙제 및 교재 진행 상황</div>
+        <table class="check-table" id="hw-table">
+          <thead>
+            <tr>
+              <th rowspan="2">집중공략</th>
+              <th>#1</th><th>#2</th><th>#3</th><th>#4</th><th>#5</th><th>#6</th><th>#7</th><th>#8</th>
+            </tr>
+            <tr>
+              <td><select class="inline" id="hw-1"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-2"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-3"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-4"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-5"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-6"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-7"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-8"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+            </tr>
+            <tr>
+              <th rowspan="2"></th>
+              <th>#9</th><th>#10</th><th>#11</th><th>#12</th><th>낙오1회</th><th>낙오2회</th><th>낙오3회</th><th>낙오4회</th>
+            </tr>
+            <tr>
+              <td><select class="inline" id="hw-9"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-10"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-11"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-12"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-13"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-14"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-15"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-16"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+            </tr>
+          </thead>
+        </table>
+        <table class="check-table" style="margin-top:4px;">
+          <thead>
+            <tr><th>오답노트</th><th>1회</th><th>2회</th><th>3회</th><th>4회</th><th>5회</th><th>6회</th><th>7회</th><th>8회</th></tr>
+          </thead>
+          <tbody>
+            <tr><th></th>
+              <td><select class="inline" id="hw-ans1"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-ans2"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-ans3"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-ans4"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-ans5"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-ans6"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-ans7"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><select class="inline" id="hw-ans8"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="grid2">
+          <div><label>진행 중 교재</label><input type="text" id="hw-curr" placeholder="예: 유형반복R, 고쟁이, 리파인"></div>
+          <div><label>완료 교재</label><input type="text" id="hw-done" placeholder="예: 마플교과서"></div>
+        </div>
+        <div class="grid2">
+          <div><label>학교 자료</label><input type="text" id="hw-school" placeholder="예: -"></div>
+          <div><label>추천 교재</label><input type="text" id="hw-rec" placeholder="예: -"></div>
+        </div>
+
+        <div class="section-title">리허설 시험 성적</div>
+        <table class="exam-table">
+          <thead>
+            <tr><th>회차</th><th>학교명</th><th>본인 점수</th><th>1등급 컷</th><th>피드백</th></tr>
+          </thead>
+          <tbody id="exam-tbody">
+            <tr>
+              <td style="text-align:center">1회</td>
+              <td><input type="text" id="ex1-school" placeholder="예: 송도고.2025"></td>
+              <td><input type="text" id="ex1-score" placeholder="예: 77.6점"></td>
+              <td><input type="text" id="ex1-cut" placeholder="예: 90.1점"></td>
+              <td><textarea id="ex1-fb" placeholder="피드백 입력"></textarea></td>
+            </tr>
+            <tr>
+              <td style="text-align:center">2회</td>
+              <td><input type="text" id="ex2-school"></td>
+              <td><input type="text" id="ex2-score"></td>
+              <td><input type="text" id="ex2-cut"></td>
+              <td><textarea id="ex2-fb"></textarea></td>
+            </tr>
+            <tr>
+              <td style="text-align:center">3회</td>
+              <td><input type="text" id="ex3-school"></td>
+              <td><input type="text" id="ex3-score"></td>
+              <td><input type="text" id="ex3-cut"></td>
+              <td><textarea id="ex3-fb"></textarea></td>
+            </tr>
+            <tr>
+              <td style="text-align:center">4회</td>
+              <td><input type="text" id="ex4-school"></td>
+              <td><input type="text" id="ex4-score"></td>
+              <td><input type="text" id="ex4-cut"></td>
+              <td><textarea id="ex4-fb"></textarea></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="section-title">개별 학습 진행 상황 (주차별)</div>
+        <table class="counsel-table">
+          <thead>
+            <tr><th>주차</th><th>날짜</th><th>○△X</th><th>진행 내용</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1주차</td><td><input type="text" id="p1-date" placeholder="5/14" style="width:60px;margin:0;padding:3px 4px;font-size:12px;border:none;"></td>
+              <td><select id="p1-sym" style="margin:0;padding:3px;font-size:12px;width:55px;"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><textarea id="p1-content" placeholder="진행 내용 입력"></textarea></td></tr>
+            <tr><td>2주차</td><td><input type="text" id="p2-date" placeholder="5/21" style="width:60px;margin:0;padding:3px 4px;font-size:12px;border:none;"></td>
+              <td><select id="p2-sym" style="margin:0;padding:3px;font-size:12px;width:55px;"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><textarea id="p2-content"></textarea></td></tr>
+            <tr><td>3주차</td><td><input type="text" id="p3-date" placeholder="5/28" style="width:60px;margin:0;padding:3px 4px;font-size:12px;border:none;"></td>
+              <td><select id="p3-sym" style="margin:0;padding:3px;font-size:12px;width:55px;"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><textarea id="p3-content"></textarea></td></tr>
+            <tr><td>4주차</td><td><input type="text" id="p4-date" style="width:60px;margin:0;padding:3px 4px;font-size:12px;border:none;"></td>
+              <td><select id="p4-sym" style="margin:0;padding:3px;font-size:12px;width:55px;"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><textarea id="p4-content"></textarea></td></tr>
+            <tr><td>5주차</td><td><input type="text" id="p5-date" style="width:60px;margin:0;padding:3px 4px;font-size:12px;border:none;"></td>
+              <td><select id="p5-sym" style="margin:0;padding:3px;font-size:12px;width:55px;"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><textarea id="p5-content"></textarea></td></tr>
+            <tr><td>6주차</td><td><input type="text" id="p6-date" style="width:60px;margin:0;padding:3px 4px;font-size:12px;border:none;"></td>
+              <td><select id="p6-sym" style="margin:0;padding:3px;font-size:12px;width:55px;"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><textarea id="p6-content"></textarea></td></tr>
+            <tr><td>7주차</td><td><input type="text" id="p7-date" style="width:60px;margin:0;padding:3px 4px;font-size:12px;border:none;"></td>
+              <td><select id="p7-sym" style="margin:0;padding:3px;font-size:12px;width:55px;"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><textarea id="p7-content"></textarea></td></tr>
+            <tr><td>8주차</td><td><input type="text" id="p8-date" style="width:60px;margin:0;padding:3px 4px;font-size:12px;border:none;"></td>
+              <td><select id="p8-sym" style="margin:0;padding:3px;font-size:12px;width:55px;"><option>-</option><option>○</option><option>△</option><option>X</option></select></td>
+              <td><textarea id="p8-content"></textarea></td></tr>
+          </tbody>
+        </table>
+
+        <div class="section-title">시험, 숙제, 학습 습관, 학습 방향, 고민 등 종합 상담</div>
+        <table class="counsel-table">
+          <thead>
+            <tr><th>주차</th><th>상담T</th><th>상담 내용</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1주차</td><td><input type="text" id="c1-teacher" placeholder="효린T" style="width:70px;margin:0;padding:3px;font-size:12px;border:none;"></td>
+              <td><textarea id="c1-content" placeholder="상담 내용 입력" style="height:70px;"></textarea></td></tr>
+            <tr><td>2주차</td><td><input type="text" id="c2-teacher" style="width:70px;margin:0;padding:3px;font-size:12px;border:none;"></td>
+              <td><textarea id="c2-content" style="height:70px;"></textarea></td></tr>
+            <tr><td>3주차</td><td><input type="text" id="c3-teacher" style="width:70px;margin:0;padding:3px;font-size:12px;border:none;"></td>
+              <td><textarea id="c3-content" style="height:70px;"></textarea></td></tr>
+            <tr><td>4주차</td><td><input type="text" id="c4-teacher" style="width:70px;margin:0;padding:3px;font-size:12px;border:none;"></td>
+              <td><textarea id="c4-content" style="height:70px;"></textarea></td></tr>
+            <tr><td>5주차</td><td><input type="text" id="c5-teacher" style="width:70px;margin:0;padding:3px;font-size:12px;border:none;"></td>
+              <td><textarea id="c5-content" style="height:70px;"></textarea></td></tr>
+            <tr><td>6주차</td><td><input type="text" id="c6-teacher" style="width:70px;margin:0;padding:3px;font-size:12px;border:none;"></td>
+              <td><textarea id="c6-content" style="height:70px;"></textarea></td></tr>
+            <tr><td>7주차</td><td><input type="text" id="c7-teacher" style="width:70px;margin:0;padding:3px;font-size:12px;border:none;"></td>
+              <td><textarea id="c7-content" style="height:70px;"></textarea></td></tr>
+          </tbody>
+        </table>
+
+        <div class="success-msg" id="journal-ok" style="margin-top:12px;">✅ 저장되었습니다!</div>
+        <div style="margin-top:12px; display:flex; gap:8px;">
+          <button class="btn btn-primary" onclick="saveJournal()">저장하기</button>
+          <button class="btn btn-danger" id="delete-journal-btn" onclick="deleteJournal()" style="display:none;">이 일지 삭제</button>
+        </div>
+      </div>
+
+      <!-- 이전 일지 목록 -->
+      <div class="card">
+        <div class="card-title">이전에 저장된 일지</div>
+        <div id="prev-journals-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 학부모 화면 -->
+<div id="page-parent" class="hidden">
+  <div class="topbar">
+    <div class="topbar-title">📋 상담일지 포털</div>
+    <div class="topbar-right">
+      <span id="parent-name-display"></span>
+      <button class="btn btn-sm" onclick="doLogout()">로그아웃</button>
+    </div>
+  </div>
+  <div class="main">
+    <div id="parent-journal-list"></div>
+  </div>
+</div>
+
+<script>
+// ── 데이터 ──────────────────────────────────────────
+function loadData() {
+  const s = localStorage.getItem('v2_students');
+  const j = localStorage.getItem('v2_journals');
+  return {
+    students: s ? JSON.parse(s) : [
+      { id: 0, name: '관리자(조교)', email: 'admin@admin.com', pw: 'admin1234', role: 'admin' }
+    ],
+    journals: j ? JSON.parse(j) : []
+  };
+}
+function save() { localStorage.setItem('v2_students', JSON.stringify(db.students)); localStorage.setItem('v2_journals', JSON.stringify(db.journals)); }
+let db = loadData();
+let currentUser = null;
+let currentStudentId = null;
+let editingJournalId = null;
+
+// ── 로그인/로그아웃 ──────────────────────────────────
+function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw = document.getElementById('login-pw').value.trim();
+  const user = db.students.find(s => s.email === email && s.pw === pw);
+  if (!user) { document.getElementById('login-error').style.display = 'block'; return; }
+  document.getElementById('login-error').style.display = 'none';
+  currentUser = user;
+  if (user.role === 'admin') { showPage('admin'); renderAdminList(); document.getElementById('admin-name-display').textContent = user.name; }
+  else { showPage('parent'); renderParentView(); document.getElementById('parent-name-display').textContent = user.name + ' 학부모님'; }
+}
+function doLogout() { currentUser = null; showPage('login'); document.getElementById('login-email').value=''; document.getElementById('login-pw').value=''; }
+
+// ── 페이지/뷰 전환 ────────────────────────────────────
+function showPage(p) {
+  ['login','admin','parent'].forEach(x => document.getElementById('page-'+x).classList.toggle('hidden', x!==p));
+}
+function showView(v) {
+  ['admin-list','admin-add-student','admin-journal'].forEach(x => document.getElementById(x).classList.toggle('hidden', x!==v));
+  if (v==='admin-list') renderAdminList();
+}
+
+// ── 조교: 학생 목록 ───────────────────────────────────
+function getWeekStart() {
+  const now = new Date(), day = now.getDay();
+  const diff = now.getDate() - day + (day===0?-6:1);
+  return new Date(new Date().setDate(diff)).toISOString().slice(0,10);
+}
+function renderAdminList() {
+  const realStudents = db.students.filter(s => s.role !== 'admin');
+  document.getElementById('stat-total').textContent = realStudents.length;
+  document.getElementById('stat-entries').textContent = db.journals.length;
+  const ws = getWeekStart();
+  document.getElementById('stat-week').textContent = db.journals.filter(j => (j.savedAt||'') >= ws).length;
+  const list = document.getElementById('student-list');
+  if (!realStudents.length) { list.innerHTML = '<div class="empty">아직 등록된 학생이 없어요</div>'; return; }
+  list.innerHTML = realStudents.map(s => {
+    const jList = db.journals.filter(j => j.studentId === s.id);
+    const latest = jList.sort((a,b)=>(b.savedAt||'').localeCompare(a.savedAt||''))[0];
+    const done = latest && (latest.savedAt||'') >= ws;
+    return `<div class="student-item" onclick="openJournalEditor(${s.id})">
+      <div>
+        <div style="font-weight:600">${s.name}</div>
+        <div style="font-size:12px;color:#888">${s.school||''} · 일지 ${jList.length}건</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="badge ${done?'badge-done':'badge-need'}">${done?'이번주 완료':'업데이트 필요'}</span>
+        <span style="color:#ccc">›</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 조교: 학생 추가 ───────────────────────────────────
+let nextId = () => (db.students.length ? Math.max(...db.students.map(s=>s.id))+1 : 1);
+function addStudent() {
+  const name=v('ns-name'),school=v('ns-school'),grade=v('ns-grade'),clinic=v('ns-clinic'),major=v('ns-major'),email=v('ns-email'),pw=v('ns-pw');
+  if (!name||!email||!pw) { show('add-err'); return; } hide('add-err');
+  if (db.students.find(s=>s.email===email)) { document.getElementById('add-err').textContent='이미 등록된 이메일이에요.'; show('add-err'); return; }
+  db.students.push({ id:nextId(), name, school, grade, clinic, major, email, pw, role:'parent' });
+  save();
+  show('add-ok'); setTimeout(()=>{ hide('add-ok'); showView('admin-list'); ['ns-name','ns-school','ns-grade','ns-clinic','ns-major','ns-email','ns-pw'].forEach(id=>document.getElementById(id).value=''); }, 1200);
+}
+
+// ── 조교: 일지 에디터 ─────────────────────────────────
+function openJournalEditor(sid) {
+  currentStudentId = sid; editingJournalId = null;
+  const s = db.students.find(x=>x.id===sid);
+  document.getElementById('journal-title').textContent = s.name + ' 상담일지 작성';
+  clearJournalForm();
+  hide('delete-journal-btn');
+  showView('admin-journal');
+  renderPrevJournals(sid);
+}
+function clearJournalForm() {
+  ['j-period','j-mid','j-mock','hw-curr','hw-done','hw-school','hw-rec'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  for(let i=1;i<=16;i++) { const el=document.getElementById('hw-'+i); if(el) el.value='-'; }
+  ['hw-ans1','hw-ans2'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value='-'; });
+  for(let i=1;i<=4;i++) ['school','score','cut','fb'].forEach(f=>{ const el=document.getElementById('ex'+i+'-'+f); if(el) el.value=''; });
+  for(let i=1;i<=8;i++) { ['date','content'].forEach(f=>{ const el=document.getElementById('p'+i+'-'+f); if(el) el.value=''; }); const s=document.getElementById('p'+i+'-sym'); if(s) s.value='-'; }
+  for(let i=1;i<=7;i++) { ['teacher','content'].forEach(f=>{ const el=document.getElementById('c'+i+'-'+f); if(el) el.value=''; }); }
+}
+function loadJournalForm(j) {
+  sv('j-period',j.period); sv('j-mid',j.mid); sv('j-mock',j.mock);
+  for(let i=1;i<=16;i++) sv('hw-'+i, j.hw&&j.hw[i]||'-');
+  for(let i=1;i<=8;i++) sv('hw-ans'+i, j.hwAns&&j.hwAns[i]||'-');
+  sv('hw-curr',j.hwCurr); sv('hw-done',j.hwDone); sv('hw-school',j.hwSchool); sv('hw-rec',j.hwRec);
+  for(let i=1;i<=4;i++) { sv('ex'+i+'-school',j.exams&&j.exams[i]&&j.exams[i].school||''); sv('ex'+i+'-score',j.exams&&j.exams[i]&&j.exams[i].score||''); sv('ex'+i+'-cut',j.exams&&j.exams[i]&&j.exams[i].cut||''); sv('ex'+i+'-fb',j.exams&&j.exams[i]&&j.exams[i].fb||''); }
+  for(let i=1;i<=8;i++) { sv('p'+i+'-date',j.progress&&j.progress[i]&&j.progress[i].date||''); const s=document.getElementById('p'+i+'-sym'); if(s) s.value=(j.progress&&j.progress[i]&&j.progress[i].sym)||'-'; sv('p'+i+'-content',j.progress&&j.progress[i]&&j.progress[i].content||''); }
+  for(let i=1;i<=7;i++) { sv('c'+i+'-teacher',j.counsel&&j.counsel[i]&&j.counsel[i].teacher||''); sv('c'+i+'-content',j.counsel&&j.counsel[i]&&j.counsel[i].content||''); }
+}
+function readJournalForm() {
+  const hw={}, exams={}, progress={}, counsel={};
+  for(let i=1;i<=16;i++) hw[i]=gv('hw-'+i);
+  for(let i=1;i<=4;i++) exams[i]={ school:gv('ex'+i+'-school'), score:gv('ex'+i+'-score'), cut:gv('ex'+i+'-cut'), fb:gv('ex'+i+'-fb') };
+  for(let i=1;i<=8;i++) progress[i]={ date:gv('p'+i+'-date'), sym:gv('p'+i+'-sym'), content:gv('p'+i+'-content') };
+  for(let i=1;i<=7;i++) counsel[i]={ teacher:gv('c'+i+'-teacher'), content:gv('c'+i+'-content') };
+  return { studentId:currentStudentId, period:gv('j-period'), mid:gv('j-mid'), mock:gv('j-mock'), hw, hwAns1:gv('hw-ans1'), hwAns2:gv('hw-ans2'), hwCurr:gv('hw-curr'), hwDone:gv('hw-done'), hwSchool:gv('hw-school'), hwRec:gv('hw-rec'), exams, progress, counsel, savedAt:new Date().toISOString().slice(0,10) };
+}
+function saveJournal() {
+  const j = readJournalForm();
+  if (editingJournalId !== null) {
+    const idx = db.journals.findIndex(x=>x.id===editingJournalId);
+    if (idx>=0) { j.id=editingJournalId; db.journals[idx]=j; }
+  } else { j.id = Date.now(); db.journals.push(j); }
+  save(); editingJournalId = null; show('journal-ok'); setTimeout(()=>hide('journal-ok'),1500);
+  renderPrevJournals(currentStudentId);
+}
+function deleteJournal() {
+  if (!confirm('이 일지를 삭제할까요?')) return;
+  db.journals = db.journals.filter(j=>j.id!==editingJournalId);
+  save(); editingJournalId=null; clearJournalForm(); hide('delete-journal-btn'); renderPrevJournals(currentStudentId);
+}
+function renderPrevJournals(sid) {
+  const jList = db.journals.filter(j=>j.studentId===sid).sort((a,b)=>b.savedAt.localeCompare(a.savedAt));
+  const el = document.getElementById('prev-journals-list');
+  if (!jList.length) { el.innerHTML='<div class="empty">아직 저장된 일지가 없어요</div>'; return; }
+  el.innerHTML = jList.map(j=>`<div class="student-item" onclick="editJournal(${j.id})">
+    <div><div style="font-weight:600">${j.period||'제목 없음'} 상담일지</div><div style="font-size:12px;color:#888">저장일: ${j.savedAt}</div></div>
+    <span style="color:#ccc">›</span>
+  </div>`).join('');
+}
+function editJournal(jid) {
+  const j = db.journals.find(x=>x.id===jid);
+  if (!j) return;
+  editingJournalId = jid;
+  loadJournalForm(j);
+  show('delete-journal-btn');
+  window.scrollTo(0,0);
+}
+
+// ── 학부모: 일지 뷰 ───────────────────────────────────
+function symClass(s) { if(s==='○') return 'symbol-o'; if(s==='X') return 'symbol-x'; if(s==='△') return 'symbol-tri'; return ''; }
+function renderParentView() {
+  const s = currentUser;
+  const jList = db.journals.filter(j=>j.studentId===s.id).sort((a,b)=>b.savedAt.localeCompare(a.savedAt));
+  const el = document.getElementById('parent-journal-list');
+  if (!jList.length) { el.innerHTML='<div class="empty" style="margin-top:3rem;">아직 작성된 상담일지가 없습니다.<br>조금만 기다려주세요 😊</div>'; return; }
+  el.innerHTML = jList.map(j => `
+  <div class="report-wrap" style="margin-bottom:2rem;">
+    <div class="report-header">
+      <div></div>
+      <div class="report-academy">🏫 최낙현수학</div>
+    </div>
+    <div class="report-main-title">◇ ${j.period||''} 상담 일지 ◇</div>
+
+    <div class="report-section">
+      <div class="report-section-title">학생 정보</div>
+      <table class="report-table">
+        <tr><th>이름</th><td>${s.name}</td><th>학교</th><td>${s.school||''}</td><th>학년</th><td>${s.grade||''}</td><th>중간고사 성적</th><td>${j.mid||''}</td></tr>
+        <tr><th>희망학과</th><td>${s.major||''}</td><th>클리닉 시간</th><td colspan="3">${s.clinic||''}</td><th>6월 모의고사 성적</th><td>${j.mock||''}</td></tr>
+      </table>
+    </div>
+
+    <div class="report-section">
+      <div class="report-section-title">숙제 및 교재 진행 상황 (○△X)</div>
+      <table class="report-table">
+        <tr><th rowspan="2">집중공략</th><th>#1</th><th>#2</th><th>#3</th><th>#4</th><th>#5</th><th>#6</th><th>#7</th><th>#8</th></tr>
+        <tr>${[1,2,3,4,5,6,7,8].map(i=>`<td><span class="${symClass(j.hw&&j.hw[i])}">${j.hw&&j.hw[i]||'-'}</span></td>`).join('')}</tr>
+        <tr><th rowspan="2"></th><th>#9</th><th>#10</th><th>#11</th><th>#12</th><th>낙오1회</th><th>낙오2회</th><th>낙오3회</th><th>낙오4회</th></tr>
+        <tr>${[9,10,11,12,13,14,15,16].map(i=>`<td><span class="${symClass(j.hw&&j.hw[i])}">${j.hw&&j.hw[i]||'-'}</span></td>`).join('')}</tr>
+        <tr><th>오답노트</th><td colspan="4">1회: <span class="${symClass(j.hwAns1)}">${j.hwAns1||'-'}</span></td><td colspan="4">2회: <span class="${symClass(j.hwAns2)}">${j.hwAns2||'-'}</span></td></tr>
+        <tr><th>교재</th><td colspan="4" class="left">진행 중: ${j.hwCurr||'-'}</td><td colspan="4" class="left">완료: ${j.hwDone||'-'}</td></tr>
+      </table>
+    </div>
+
+    <div class="report-section">
+      <div class="report-section-title">리허설 시험 성적</div>
+      <table class="report-table">
+        <tr><th>회차</th><th>학교명</th><th>본인 점수</th><th>1등급 컷</th><th>피드백</th></tr>
+        ${[1,2,3,4].map(i=>j.exams&&j.exams[i]&&(j.exams[i].school||j.exams[i].score)?`<tr><td>${i}회</td><td>${j.exams[i].school||''}</td><td>${j.exams[i].score||''}</td><td>${j.exams[i].cut||''}</td><td class="left">${j.exams[i].fb||''}</td></tr>`:'' ).join('')}
+      </table>
+    </div>
+
+    <div class="report-section">
+      <div class="report-section-title">개별 학습 진행 상황</div>
+      <table class="report-table">
+        <tr><th>주차</th><th>날짜</th><th>○△X</th><th>진행 내용</th></tr>
+        ${[1,2,3,4,5,6,7,8].map(i=>j.progress&&j.progress[i]?`<tr><td>${i}주차</td><td>${j.progress[i].date||''}</td><td><span class="${symClass(j.progress[i].sym)}">${j.progress[i].sym||'-'}</span></td><td class="left">${j.progress[i].content||''}</td></tr>`:'').join('')}
+      </table>
+    </div>
+
+    <div class="report-section">
+      <div class="report-section-title">시험, 숙제, 학습 습관, 학습 방향, 고민 등 종합 상담</div>
+      <table class="report-table">
+        <tr><th>주차</th><th>상담T</th><th>상담 내용</th></tr>
+        ${[1,2,3,4,5,6,7].map(i=>j.counsel&&j.counsel[i]&&j.counsel[i].content?`<tr><td>${i}주차</td><td>${j.counsel[i].teacher||''}</td><td class="left">${j.counsel[i].content}</td></tr>`:'').join('')}
+      </table>
+    </div>
+  </div>`).join('');
+}
+
+// ── 헬퍼 ─────────────────────────────────────────────
+function v(id) { return document.getElementById(id)?.value?.trim()||''; }
+function gv(id) { return document.getElementById(id)?.value||''; }
+function sv(id, val) { const el=document.getElementById(id); if(el) el.value=val||''; }
+function show(id) { document.getElementById(id).style.display='block'; }
+function hide(id) { document.getElementById(id).style.display='none'; }
+</script>
+</body>
+</html>
+e>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; min-height: 100vh; }
     .tab-bar { display: flex; border-bottom: 1px solid #e0e0e0; background: #fff; padding: 0 1.5rem; position: sticky; top: 0; z-index: 10; }
     .tab { padding: 14px 20px; font-size: 14px; cursor: pointer; border-bottom: 2px solid transparent; color: #888; transition: all 0.15s; }
